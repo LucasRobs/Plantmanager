@@ -4,34 +4,26 @@ import { Header } from '../components/Header';
 import { EnviromentButton } from '../components/EnviromentButton';
 import { PlantCardPrimary } from '../components/PlantCardPrimary';
 import { Load } from '../components/Load'
+import {useNavigation } from '@react-navigation/core'
 import api from '../services/api';
 import fonts from '../styles/fonts';
 import colors from '../styles/colors';
+import { PlantProps } from '../libs/storage';
 interface EnviromentProps{
     key: string,
     title: string
 }
-interface PlantsProps{
-    id: string,
-    name: string,
-    about: string,
-    water_tips:  string,
-    photo:  string,
-    environments: [ string],
-    frequency: {
-    times:  number,
-    repeat_every:  string,
-    }
-}
+
 export function PlantSelect() {
     const [eviroments, setEviroments] = useState<EnviromentProps[]>([]);
-    const [plants, setPlants] = useState<PlantsProps[]>([]);
-    const [filteredPants, setFilteredPants] = useState<PlantsProps[]>([]);
+    const [plants, setPlants] = useState<PlantProps[]>([]);
+    const [filteredPants, setFilteredPants] = useState<PlantProps[]>([]);
     const [enviromentSelected, setEnviromentSelected] = useState('all');
     const [loading, setLoadding] = useState(true);
     const [page, setPage] = useState(1);
     const [loadingMore, setLoadingMore] = useState(false);
-    const  [loadedAll, setLoadedAll] = useState(false);
+
+    const navigation = useNavigation();
     function handleEnrivomentSelected(index: string){
         setEnviromentSelected(index);
         if(index == 'all')
@@ -49,6 +41,10 @@ export function PlantSelect() {
         fetchPlants()
     }
 
+    function handlePlantSelect(plant: PlantProps){
+        navigation.navigate('PlantSave', {plant});
+    }
+
     async function fetchPlants(){
         const { data } = await api.get(`plants?_sort=name&_order=asc&_page=${page}&_limit=8`);
         if(!data) return setLoadding(true);
@@ -60,18 +56,18 @@ export function PlantSelect() {
             setFilteredPants(data);
         }
         setLoadding(false);
-        setLoadding(false);
+        setLoadingMore(false);
     }
 
     useEffect(()=>{
         async function fetchEnviroment(){
-            const { data } = await api.get('plants_environments?_sort=title&asc');
-            setEviroments([{
-                key:'all',
-                title: 'Todos',
-            },
-            ...data
-        ]);
+            try{
+                const { data } = await api.get('plants_environments?_sort=title&asc');
+                setEviroments([{
+                    key:'all',
+                    title: 'Todos',
+                },...data]);
+            }catch(error){throw new Error(error);}
         }
         fetchEnviroment();
     },[])
@@ -94,6 +90,7 @@ export function PlantSelect() {
             <View>
                 <FlatList
                     data={eviroments}
+                    keyExtractor={(item) => String(item.key)}
                     renderItem={({item})=>(
                     <EnviromentButton 
                     title={item.title} 
@@ -108,8 +105,9 @@ export function PlantSelect() {
             <View style={styles.plants}>
                 <FlatList
                 data={filteredPants}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({item})=>(
-                    <PlantCardPrimary data={item}/>
+                    <PlantCardPrimary data={item} onPress={() => handlePlantSelect(item)}/>
                 )}
                 showsVerticalScrollIndicator={false}
                 numColumns={2}
