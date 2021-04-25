@@ -60,12 +60,12 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
         textAlign: 'center',
         color: colors.heading,
-        marginTop: 38,
+        marginTop: 45,
         fontFamily: fonts.heading,
-        lineHeight: 32
+        lineHeight: 32,
+        padding: 10
     },
     subtitle: {
         textAlign: 'center',

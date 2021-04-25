@@ -1,21 +1,45 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, Text, Image } from 'react-native'
+import { StyleSheet, View, Text, Image, ScrollView, Alert } from 'react-native'
 import { Header } from '../components/Header'
 import colors from '../styles/colors'
 import waterDrop from '../assets/waterdrop.png'
-import { PlantProps , loadPlant} from '../libs/storage'
+import { PlantProps, loadPlant, removePlant } from '../libs/storage'
 import { formatDistance } from 'date-fns'
 import pt from 'date-fns/esm/locale/pt/index.js'
 import { FlatList } from 'react-native-gesture-handler'
 import fonts from '../styles/fonts'
 import { PlantCardSecondary } from '../components/PlantCardSecondary'
+import { Load } from '../components/Load'
 
 export function MyPlants() {
-    const [myPlants, setMyPlants] =useState<PlantProps[]>([]);
+    const [myPlants, setMyPlants] = useState<PlantProps[]>([]);
     const [loading, setLoading] = useState(true);
-    const[nextWarterd, setNextWarterd] = useState<string>();
-    useEffect(()=>{
-        async function loadStorageData(){
+    const [nextWarterd, setNextWarterd] = useState<string>();
+
+    function handlerRemove(plant: PlantProps) {
+        Alert.alert('Remover', `Deseja remover a ${plant.name}?`, [
+            {
+                text: 'Não',
+                style: 'cancel'
+            },
+            {
+                text: 'Sim',
+                onPress: async () => {
+                    try {
+                        await removePlant(plant.id);
+                        setMyPlants(oldData => (
+                            oldData.filter(item => item.id !== plant.id)
+                        ));
+                    } catch (error) {
+                        Alert.alert('Não foi possível remover.')
+                    }
+                }
+            }
+        ])
+    }
+
+    useEffect(() => {
+        async function loadStorageData() {
             const plantsStoraged = await loadPlant();
 
             const nextTime = formatDistance(
@@ -30,7 +54,9 @@ export function MyPlants() {
             setLoading(false);
         }
         loadStorageData();
-    },[])
+    }, [])
+
+    if (loading) return <Load />
     return (
         <View style={styles.container}>
             <Header />
@@ -44,15 +70,17 @@ export function MyPlants() {
                 <Text style={styles.plantsTitle}>
                     Proximas regadas
                 </Text>
-                <FlatList
-                    data={myPlants}
-                    keyExtractor={(item) => String(item.id)}
-                    renderItem={({item}) => (
-                        <PlantCardSecondary data={item}/>
-                    )}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ flex: 1}}
-                />
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <FlatList
+                        data={myPlants}
+                        keyExtractor={(item) => String(item.id)}
+                        renderItem={({ item }) => (
+                            <PlantCardSecondary data={item} handleRemove={() => { handlerRemove(item) }} />
+                        )}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ flex: 1 }}
+                    />
+                </ScrollView>
             </View>
         </View>
     )
@@ -62,7 +90,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 50,
+        paddingHorizontal: 25,
         paddingTop: 50,
         backgroundColor: colors.background
     },
@@ -80,17 +108,17 @@ const styles = StyleSheet.create({
         height: 60
     },
     spotlightText: {
-        flex:1,
+        flex: 1,
         color: colors.blue,
         paddingHorizontal: 20,
         textAlign: 'justify'
     },
-    plants:{
+    plants: {
         flex: 1,
         width: '100%'
     },
-    plantsTitle:{
-        fontSize:24,
+    plantsTitle: {
+        fontSize: 24,
         fontFamily: fonts.heading,
         color: colors.heading,
         marginVertical: 20
