@@ -64,8 +64,3 @@ You can view the project layout through the links below:
 - [Layout](https://www.figma.com/file/IhQRtrOZdu3TrvkPYREzOy/PlantManager) 
 
 Remembering that you need to have a [Figma](http://figma.com/) account to access it.
-
-## 📝 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for details.
-
